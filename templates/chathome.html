@@ -1,0 +1,135 @@
+{% load sass_tags %}
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <script src="http://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <link rel="stylesheet" href="{% sass_src 'mybulma/sass/mystyles.scss' %}">
+    {% block scripts %}
+    <script>
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== ''){
+                var cookies = document.cookie.split(';');
+                for (var i=0; i<cookies.length; i++){
+                    var cookie = jQuery.trim(cookies[i]);
+                    if (cookie.substring(0, name.length + 1) === (name + '=')){
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        var csrftoken = getCookie('csrftoken');
+
+        var xhr;
+
+        function chatTrain() {
+
+            var strurl = "chattrain";
+
+            xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4) {
+                    var data = xhr.responseText;
+
+                    var obj = JSON.parse(data);
+                    alert(obj.result);
+                    }
+            };
+            alert(strurl);
+            xhr.open('GET', strurl);
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            xhr.send(null);
+        }
+
+
+        function sendAsk() {
+            chattext = document.getElementById("chattext").value;
+            if(chattext == "") {
+                document.getElementById("chattext").focus();
+                return false;
+            }
+
+            addtext = "<div style='margin:12px; text-align:right;'><span style='background-color:#3388cc; color:#000000; padding:3px 10px; border-radius:3px;'>" + chattext + "</span></div>"
+            document.getElementById("chatbox").innerHTML += addtext;
+
+            var strurl = "chatanswer?chattext=" + chattext;
+
+            xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4) {
+                    var data = xhr.responseText;
+                    var obj = JSON.parse(data);
+                    
+                    bottext = "<div style='margin:12px; text-align:left;'><span style='background-color:#DDDDDD; padding:3px 10px; border-radius:3px;'>" + obj.anstext + "</span></div>"
+                    document.getElementById("chatbox").innerHTML += bottext;
+
+                    var mydiv = document.getElementById("chatbox");
+                    mydiv.scrollTop = document.getElementById("chatbox").scrollHeight;
+                }
+            };
+            xhr.open("GET", strurl);
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            xhr.send(null);
+        }
+
+    </script>
+    {% endblock %}
+    {% block styles %}
+    <style>
+        #chatbox {
+            height: 750px;
+            margin-top:50px; 
+            background-color:#bbccdd;
+            width: 100%;
+            overflow-x: hidden;
+            overflow-y: scroll;
+            padding-top: 30px;
+        }
+        .chatfooter {
+            position: fixed;
+            left:0;
+            bottom:0;
+            width:100%;
+            padding:10px 0;
+            background-color: #fff;
+            color: #000;
+            text-align: center;
+        }
+    </style>
+    {% endblock %}
+</head>
+<body>
+    <div class="container is-fluid">
+            <nav class="navbar is-fixed-top is-spaced mb-4" role="navigation">
+                <div class="nav-item">
+                    <p class="title">Shopping Helper Chatbot</p>
+                </div>
+                <div class="navbar-end">
+                    <button onclick="chatTrain()" class="button is-primary">Train</button>
+                </div>   
+            </nav>         
+            <div class="content mt-auto" id="chatbox"></div>
+            <div class="chatfooter">
+                <table width="100%">
+                    <tr>
+                        <td width="85%" align="left">
+                            <input type="text" id="chattext" style="padding: 10px; width: 100%; border:solid 0px #000;">
+                        </td>
+                        <td wdith="15%" align="right">
+                            <button class="button is-info" onclick="sendAsk()">SEND</button>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
